@@ -1,6 +1,6 @@
 {
   "name": "@mdrooker/rna-stat-manager",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "",
   "exports": {
     ".": {
@@ -23,7 +23,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@mdrooker/rna-cache-manager": "0.0.7",
+    "@mdrooker/rna-cache-manager": "0.0.9",
     "@mdrooker/rna-logger": "0.0.7",
     "colors": "^1.4.0",
     "debug": "4.3.4",
