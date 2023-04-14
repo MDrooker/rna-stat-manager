@@ -1,16 +1,14 @@
 {
   "name": "@mdrooker/rna-stat-manager",
-  "version": "0.0.5",
+  "version": "0.0.9",
   "description": "",
   "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "import": "./src/index.js"
-    }
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/mjs/index.js"
   },
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && swc ./src -d dist"
+    "build": "rimraf dist && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && ./fixup"
   },
   "keywords": [],
   "author": "",
@@ -23,8 +21,8 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@mdrooker/rna-cache-manager": "0.0.11",
-    "@mdrooker/rna-logger": "0.0.7",
+    "@mdrooker/rna-cache-manager": "^0.0.15",
+    "@mdrooker/rna-logger": "0.0.10",
     "colors": "^1.4.0",
     "debug": "4.3.4",
     "lodash": "4.17.21"
