@@ -1,32 +1,38 @@
 import os from "os";
 import { debugModule } from '@mdrooker/rna-logger';
-import { getPublisher } from "@mdrooker/rna-cache-manager";
+import Redis from "ioredis";
 
 const systemHost = os.hostname().toLowerCase();
 const debug = new debugModule("rna:stats-manager");
 const appDebug = new debugModule("app:stats-manager");
 
-let _config;
+let _redisConfig;
 let _instanceurn;
 let _publisher
-
+let _config;
+let _options;
 class StatsService {
-
     init({ config, instanceurn }) {
-        if (config) {
+        if (config && config.REDIS) {
             this._config = config;
+            this._redisConfig = config.REDIS;
+            this._options = {
+                connectionName: 'redis',
+                host: this._redisConfig.URL,
+                port: this._redisConfig.PORT,
+                password: this._redisConfig.PASSWORD ? this._redisConfig.PASSWORD : null,
+                connectTimeout: this._redisConfig.TIMEOUT ? this._redisConfig.TIMEOUT : 20000,
+                compress: true,
+                maxRetriesPerRequest: 10
+            };
         } else {
             throw new Error('No config passed to StatsService init method');
         }
         if (instanceurn) {
             this._instanceurn = instanceurn
         }
-        if (!getPublisher()) {
-            appDebug('No connected publisher found in cache manager. StatsService may not work')
-        } else {
-            _publisher = getPublisher()
-            return _publisher
-        }
+        _publisher = new Redis(this._options);
+        return _publisher
 
     }
     get publisher() {
