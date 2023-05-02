@@ -119,9 +119,9 @@ class StatsService {
     }
     removeAllKeysForInstance({ instanceurn }) {
         let buildKey = this.namedStatKey({ instanceurn: instanceurn, type: "*", name: "*" });
-        debug(`Removing All Keys for ${key}`)
+        debug(`Removing All Keys for ${buildKey}`)
         try {
-            let stream = publisher.scanStream({
+            let stream = this.publisher.scanStream({
                 match: `${buildKey}`
             });
             stream.on('data', function (keys) {
