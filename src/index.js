@@ -47,20 +47,24 @@ class StatsService {
     statKeyPrefix() {
         return `app:${this._config.NAME.SYSTEM}:${this._config.NAME.PRODUCT}:${this._config.ENVIRONMENT}`
     }
-    namedStatKey({ instanceurn, type, name, host = systemHost }) {
-        if (instanceurn) {
-            if (host) {
-                return `${this.statKeyPrefix()}:stat:${type}:${name}:${host}:${instanceurn}`
-
-            } else {
-                return `${this.statKeyPrefix()}:stat:${type}:${name}:${instanceurn}`
-            }
+    namedStatKey({ global, instanceurn, type, name, host = systemHost }) {
+        if (global) {
+            return `${this.statKeyPrefix()}:stat:${type}:${name}`
         } else {
-            if (host) {
-                return `${this.statKeyPrefix()}:stat:${type}:${name}:${host}`
+            if (instanceurn) {
+                if (host) {
+                    return `${this.statKeyPrefix()}:stat:${type}:${name}:${host}:${instanceurn}`
 
+                } else {
+                    return `${this.statKeyPrefix()}:stat:${type}:${name}:${instanceurn}`
+                }
             } else {
-                return `${this.statKeyPrefix()}:stat:${type}:${name}`
+                if (host) {
+                    return `${this.statKeyPrefix()}:stat:${type}:${name}:${host}`
+
+                } else {
+                    return `${this.statKeyPrefix()}:stat:${type}:${name}`
+                }
             }
         }
     }
@@ -69,11 +73,11 @@ class StatsService {
         debug(`Geting Stat Value for ${key}`)
         return await this.publisher.get(key);
     }
-    async decrStatValue({ instanceurn, type, name, value = -1, expiresAtInSeconds, fast = false }) {
+    async decrStatValue({ global, host, instanceurn, type, name, value = 1, expiresAtInSeconds, fast = false }) {
         let newValue;
-        let key = this.namedStatKey({ type: `${type}`, name: `${name}`, instanceurn })
+        let key = this.namedStatKey({ global, host, type: `${type}`, name: `${name}`, instanceurn })
         debug(`Decrementing Value ${value} for key  ${key}`)
-
+        debugger
         if (fast) {
             newValue = this.publisher.decrby(key, value);
         } else {
@@ -84,9 +88,9 @@ class StatsService {
         }
         return newValue
     }
-    async incrStatValue({ instanceurn, type, name, value = 1, expiresAtInSeconds, fast = false }) {
+    async incrStatValue({ global, host, instanceurn, type, name, value = 1, expiresAtInSeconds, fast = false }) {
         let newValue;
-        let key = this.namedStatKey({ type: `${type}`, name: `${name}`, instanceurn });
+        let key = this.namedStatKey({ global, host, type: `${type}`, name: `${name}`, instanceurn, host });
         debug(`Incrementing Value ${value} for key  ${key}`)
         if (fast) {
             newValue = this.publisher.incrby(key, value);
@@ -98,8 +102,8 @@ class StatsService {
         }
         return newValue
     }
-    setStatValue({ instanceurn, type, name, value = 1, expiresAtInSeconds }) {
-        let key = this.namedStatKey({ type: `${type}`, name: `${name}`, instanceurn })
+    setStatValue({ global, instanceurn, type, name, value = 1, expiresAtInSeconds }) {
+        let key = this.namedStatKey({ global, type: `${type}`, name: `${name}`, instanceurn })
         if (typeof (value) === 'object') {
             debug(`Setting Value ${JSON.stringify(value)} for key ${key}`)
         } else {
