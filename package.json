@@ -1,6 +1,6 @@
 {
   "name": "@mdrooker/rna-stat-manager",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "",
   "exports": {
     "require": "./dist/cjs/index.js",

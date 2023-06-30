@@ -77,7 +77,6 @@ class StatsService {
         let newValue;
         let key = this.namedStatKey({ global, host, type: `${type}`, name: `${name}`, instanceurn })
         debug(`Decrementing Value ${value} for key  ${key}`)
-        debugger
         if (fast) {
             newValue = this.publisher.decrby(key, value);
         } else {
