@@ -44,12 +44,17 @@ class StatsService {
             return _publisher
         }
     }
+
     statKeyPrefix() {
         return `app:${this._config.NAME.SYSTEM}:${this._config.NAME.PRODUCT}:${this._config.ENVIRONMENT}`
     }
     namedStatKey({ global, instanceurn, type, name, host = systemHost }) {
         if (global) {
-            return `${this.statKeyPrefix()}:stat:${type}:${name}`
+            if (type) {
+                return `${this.statKeyPrefix()}:stat:${type}:${name}`
+            } else {
+                return `${this.statKeyPrefix()}:stat:${name}`
+            }
         } else {
             if (instanceurn) {
                 if (host) {
@@ -68,10 +73,48 @@ class StatsService {
             }
         }
     }
-    async getStatValue({ instanceurn, type, name }) {
-        let key = this.namedStatKey({ type: `${type}`, name: `${name}`, instanceurn })
-        debug(`Geting Stat Value for ${key}`)
-        return await this.publisher.get(key);
+    namedHashKey({ global, name, instanceurn, host = systemHost }) {
+        if (global) {
+            return `${this.statKeyPrefix()}:${name}`
+        }
+    }
+    async getStatValue({ global, instanceurn, type, name }) {
+        let key = this.namedStatKey({ global, type, name: `${name}`, instanceurn })
+        if (key.includes('*')) {
+            let results = [];
+            let count = 0;
+            const startedTime = new Date();
+            return new Promise((resolve, reject) => {
+                try {
+                    let stream = this.publisher.scanStream({
+                        match: `${key}`,
+                        // returns approximately 100 elements per call
+                        count: 1000,
+                    });
+                    stream.on('data', function (keys) {
+                        if (keys.length > 0) {
+                            debugger
+                            // `keys` is an array of strings representing key name
+                            count += keys.length
+                            results.push(keys)
+                        }
+                    });
+                    stream.on('end', function () {
+                        let elapsed = new Date() - startedTime
+                        resolve({
+                            count: count,
+                            results: results,
+                        });
+                    });
+                } catch (error) {
+                    console.log(error)
+                }
+            })
+
+        } else {
+            debug(`Geting Stat Value for ${key}`)
+            return await this.publisher.get(key);
+        }
     }
     async decrStatValue({ global, host, instanceurn, type, name, value = 1, expiresAtInSeconds, fast = false }) {
         let newValue;
@@ -101,6 +144,7 @@ class StatsService {
         }
         return newValue
     }
+
     setStatValue({ global, instanceurn, type, name, value = 1, expiresAtInSeconds }) {
         let key = this.namedStatKey({ global, type: `${type}`, name: `${name}`, instanceurn })
         if (typeof (value) === 'object') {
@@ -115,6 +159,48 @@ class StatsService {
             this.publisher.set(key, JSON.stringify({ value: value, setTime: new Date() }));
         }
     }
+    async incrHashValue({ global, host, instanceurn, name, field, value = 1, expiresAtInSeconds, fast = false }) {
+        let newValue;
+        let key = this.namedHashKey({ global, host, name: `${name}`, instanceurn, host });
+        debug(`Incrementing Hash Value ${name} for key ${key}`)
+        const pipeline = this.publisher.pipeline();
+        if (fast) {
+            newValue = pipeline.hincrby(key, field, value);
+        } else {
+            newValue = await pipeline.hincrby(key, field, value);
+        }
+        if (expiresAtInSeconds) {
+            pipeline.expire(key, expiresAtInSeconds);
+        }
+        pipeline.exec((err, result) => {
+            return newValue
+        });
+    }
+    async decrHashValue({ global, host, instanceurn, name, field, value = -1, expiresAtInSeconds, fast = false }) {
+        let newValue;
+        let key = this.namedHashKey({ global, host, name: `${name}`, instanceurn, host });
+        debug(`Incrementing Hash  Value ${name} for key ${key}`)
+        const pipeline = this.publisher.pipeline();
+        if (fast) {
+            newValue = pipeline.hincrby(key, type, value);
+        } else {
+            newValue = await pipeline.hincrby(key, type, value);
+        }
+        if (expiresAtInSeconds) {
+            pipeline.expire(key, expiresAtInSeconds);
+        }
+        pipeline.exec((err, result) => {
+            return newValue
+        });
+
+    }
+    async getHashValues({ global, host, instanceurn, name }) {
+        let key = this.namedHashKey({ global, host, name: `${name}`, instanceurn, host });
+        debug(`Getting Hash Values for key ${key}`);
+        return await this.publisher.hgetall(key);
+    }
+
+
     removeStatValue({ instanceurn, type, name }) {
         let key = this.namedStatKey({ type: `${type}`, name: `${name}`, instanceurn })
         debug(`Deleting Value ${value} for key  ${key}`)
@@ -183,10 +269,8 @@ class StatsService {
                 });
                 stream.on('end', function () {
                     let elapsed = new Date() - startedTime
-
                     resolve(count);
                 });
-
             } catch (error) {
                 console.log(error)
             }
