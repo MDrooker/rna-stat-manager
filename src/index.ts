@@ -114,7 +114,7 @@ export class CounterService {
         return this.client.set(key, value);
     }
 
-    async incrHashField(name: string, field: string, amount = 1, expirySeconds?: number) {
+    async incrHashField(name: string, field: string, amount = 1, expirySeconds?: number): Promise<number> {
         const key = this.namedCounterKey(name);
         debug(`incr hash ${key} field ${field} by ${amount}`);
         const value = await this.client.hincrby(key, field, amount);
@@ -126,7 +126,7 @@ export class CounterService {
         return value;
     }
 
-    async decrHashField(name: string, field: string, amount = 1, expirySeconds?: number) {
+    async decrHashField(name: string, field: string, amount = 1, expirySeconds?: number): Promise<number> {
         const key = this.namedCounterKey(name);
         debug(`decr hash ${key} field ${field} by ${amount}`);
         const value = await this.client.hincrby(key, field, amount);
@@ -138,7 +138,7 @@ export class CounterService {
         return value;
     }
 
-    async hashCounts(name: string) {
+    async hashCounts(name: string): Promise<Record<string, string>> {
         let key = this.namedCounterKey(name);
         return this.client.hgetall(key);
     }
