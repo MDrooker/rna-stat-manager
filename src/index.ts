@@ -5,6 +5,14 @@ const debug = Debug('rna-stat-manager');
 
 type RedisOrCluster = Redis | Cluster;
 
+export type {
+    Redis,
+    Cluster,
+    ClusterNode,
+    ClusterOptions,
+    RedisOptions,
+};
+
 export type ClusterNodeOptions = {
     nodes: ClusterNode[];
     options: ClusterOptions;
