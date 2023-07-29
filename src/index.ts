@@ -13,11 +13,6 @@ export type {
     RedisOptions,
 };
 
-export type ClusterNodeOptions = {
-    nodes: ClusterNode[];
-    options: ClusterOptions;
-};
-
 export type CounterServiceConfig = {
     app: {
         system: string;
