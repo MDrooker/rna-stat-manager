@@ -45,14 +45,14 @@ export class CounterService {
 
     async counterKeys(name: string): Promise<{count: number, results: string[]}> {
         const key = this.namedCounterKey(name);
-        
+
         if (!key.endsWith('*')) {
             return {
                 count: 1,
                 results: [key],
             };
         }
-        
+
         if (this.isCluster) {
             throw new Error('Cluster mode does not support scanStream');
         }
@@ -86,11 +86,11 @@ export class CounterService {
         const key = this.namedCounterKey(name);
         debug(`incr ${key} by ${amount}`);
         const value = await this.client.incrby(key, amount);
-        
+
         if (expirySeconds) {
             await this.client.expire(key, expirySeconds);
         }
-        
+
         return value;
     }
 
@@ -98,11 +98,11 @@ export class CounterService {
         const key = this.namedCounterKey(name);
         debug(`decr ${key} by ${amount}`);
         const value = await this.client.decrby(key, amount);
-        
+
         if (expirySeconds) {
             await this.client.expire(key, expirySeconds);
         }
-        
+
         return value;
     }
 
@@ -113,7 +113,7 @@ export class CounterService {
         if (expirySeconds) {
             return this.client.setex(key, expirySeconds, value);
         }
-        
+
         return this.client.set(key, value);
     }
 
@@ -132,13 +132,25 @@ export class CounterService {
     async decrHashField(name: string, field: string, amount = 1, expirySeconds?: number): Promise<number> {
         const key = this.namedCounterKey(name);
         debug(`decr hash ${key} field ${field} by ${amount}`);
-        const value = await this.client.hincrby(key, field, amount);
+        const value = await this.client.hincrby(key, field, amount * -1);
 
         if (expirySeconds) {
             await this.client.expire(key, expirySeconds);
         }
 
         return value;
+    }
+
+    async setHashField(name: string, field: string, value: number, expirySeconds?: number): Promise<number> {
+        const key = this.namedCounterKey(name);
+        debug(`set hash ${key} fields ${field} to ${value}`);
+        const result = await this.client.hset(key, field, value);
+
+        if (expirySeconds) {
+            await this.client.expire(key, expirySeconds);
+        }
+
+        return result;
     }
 
     async hashCounts(name: string): Promise<Record<string, string>> {
