@@ -174,6 +174,6 @@ export class CounterService {
     }
 
     private namedCounterKey(name: string): string {
-        return `${this.counterKeyPrefix()}:cnt:${name}}`;
+        return `${this.counterKeyPrefix()}:cnt:${name}`;
     }
 }
