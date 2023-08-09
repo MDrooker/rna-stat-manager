@@ -164,6 +164,10 @@ export class CounterService {
         return this.client.del(key);
     }
 
+    async close(): Promise<void> {
+        await this.client.quit();
+    }
+
     private get client(): RedisOrCluster {
         return this.redis;
     }
